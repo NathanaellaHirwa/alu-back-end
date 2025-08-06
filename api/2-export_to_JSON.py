@@ -1,48 +1,25 @@
 #!/usr/bin/python3
-"""Export employee TODO data to JSON format."""
+''' Test request to parse API's
+'''
+import csv
 import json
 import requests
 import sys
 
-
-def export_to_json(employee_id):
-    """Export employee TODO data to JSON file."""
-    try:
-        # Fetch employee data
-        base_url = "https://jsonplaceholder.typicode.com"
-        user_url = f"{base_url}/users/{employee_id}"
-        todos_url = f"{base_url}/users/{employee_id}/todos"
-
-        user = requests.get(user_url).json()
-        todos = requests.get(todos_url).json()
-
-        # Prepare data structure
-        tasks_data = {
-            employee_id: [
-                {
-                    "task": task["title"],
-                    "completed": task["completed"],
-                    "username": user["username"]
-                }
-                for task in todos
-            ]
-        }
-
-        # Write to JSON file
-        filename = f"{employee_id}.json"
-        with open(filename, 'w') as jsonfile:
-            json.dump(tasks_data, jsonfile)
-
-    except requests.exceptions.RequestException:
-        sys.exit("Error fetching data")
-    except ValueError:
-        sys.exit("Invalid employee ID")
-    except Exception as e:
-        sys.exit(f"An error occurred: {e}")
-
-
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        sys.exit("Usage: ./2-export_to_JSON.py <employee_id>")
-
-    export_to_json(sys.argv[1])
+    if len(sys.argv) > 1 and sys.argv[1].isdigit():
+        api_endpoint = "https://jsonplaceholder.typicode.com"
+        user_id = sys.argv[1]
+        user_data = requests.get(api_endpoint + "/users/" + user_id).json()
+        username = user_data.get('username')
+        todo_data = \
+            requests.get(api_endpoint + "/users/" + user_id + "/todos").\
+            json()
+        with open("{}.json".format(user_id), 'w') as json_file:
+            tasks = []
+            for task in todo_data:
+                tasks.append({'task': task['title'],
+                              'completed': task['completed'],
+                              'username': username})
+            data = {"{}".format(user_id): tasks}
+            json.dump(data, json_file)
